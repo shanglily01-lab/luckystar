@@ -35,10 +35,11 @@ p { line-height: 1.75; }
   top: 0;
   z-index: 5;
   display: flex;
-  gap: 18px;
+  flex-wrap: wrap;
+  gap: 10px 18px;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 22px;
+  padding: 14px 22px 10px;
   color: var(--paper);
   background: rgba(18, 16, 14, 0.9);
   border-bottom: 1px solid rgba(230, 211, 161, 0.18);
@@ -49,7 +50,7 @@ p { line-height: 1.75; }
   border: 0;
   color: inherit;
 }
-.brand { display: flex; gap: 10px; align-items: center; text-align: left; }
+.brand { display: flex; gap: 10px; align-items: center; text-align: left; margin-right: auto; }
 .brand strong { display: block; font-size: 1.15rem; letter-spacing: 0.18em; }
 .brand small { color: var(--gold-2); letter-spacing: 0.12em; }
 .seal {
@@ -61,15 +62,25 @@ p { line-height: 1.75; }
   color: var(--gold-2);
   border-radius: 4px;
 }
-.topbar nav { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.topbar nav {
+  display: flex;
+  flex: 1 0 100%;
+  order: 2;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-start;
+}
 .topbar nav button {
   padding: 6px 10px;
   border-radius: 999px;
   color: #efe4d0;
+  white-space: nowrap;
 }
+.profile-sheet { max-width: 760px; }
 .topbar nav button.on,
 .topbar nav button:hover { background: rgba(230, 211, 161, 0.16); }
 .account-chip {
+  order: 1;
   border: 1px solid rgba(230, 211, 161, 0.45);
   background: transparent;
   color: var(--gold-2);
