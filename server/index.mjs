@@ -1,4 +1,7 @@
+import { createReadStream, existsSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { extname, join, normalize, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadEnv, publicOrigin, sendActivation } from './mail.mjs';
 import {
   activate,
@@ -18,7 +21,42 @@ import {
 
 loadEnv();
 
-const port = Number(process.env.LUCKYSTAR_API_PORT || 8787);
+const dist = join(fileURLToPath(new URL('.', import.meta.url)), '..', 'dist');
+const host = process.env.LUCKYSTAR_HOST || '127.0.0.1';
+const port = Number(process.env.LUCKYSTAR_PORT || process.env.LUCKYSTAR_API_PORT || 8787);
+
+const TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
+  '.webp': 'image/webp',
+  '.woff2': 'font/woff2',
+};
+
+function safeFile(pathname) {
+  let rel = pathname;
+  if (rel === '/' || rel.endsWith('/')) rel += 'index.html';
+  rel = normalize(decodeURIComponent(rel)).replace(/^[/\\]+/, '');
+  if (!rel || rel.split(/[/\\]/).includes('..')) return null;
+  const full = join(dist, rel);
+  const root = dist.endsWith(sep) ? dist : dist + sep;
+  if (full !== dist && !full.startsWith(root)) return null;
+  return full;
+}
+
+function serveStatic(res, pathname) {
+  if (!existsSync(dist)) return false;
+  const requested = safeFile(pathname);
+  const file = requested && existsSync(requested) ? requested : join(dist, 'index.html');
+  if (!existsSync(file)) return false;
+  res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream' });
+  createReadStream(file).pipe(res);
+  return true;
+}
 
 function readCookie(req, name) {
   const raw = req.headers.cookie || '';
@@ -169,6 +207,8 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === 'GET' && !url.pathname.startsWith('/api') && serveStatic(res, url.pathname)) return;
+
     send(res, 404, { error: '没有这个接口' });
   } catch (error) {
     const status = error.status || 500;
@@ -176,6 +216,6 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(port, '127.0.0.1', () => {
-  console.log(`幸运星账户服务 http://127.0.0.1:${port}`);
+server.listen(port, host, () => {
+  console.log(`幸运星 http://${host}:${port}`);
 });
