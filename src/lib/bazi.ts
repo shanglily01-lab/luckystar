@@ -1,6 +1,6 @@
 import { Solar } from 'lunar-javascript';
 import type { Profile } from '../types';
-import { branchElement, controls, ELEMENTS, generates, stemElement, type Element } from './wuxing';
+import { branchElement, controls, elementPlain, ELEMENTS, generates, stemElement, type Element } from './wuxing';
 import { clockText, trueSolar, type Clock } from './time';
 
 function asList(value: { toString(): string }): string[] {
@@ -9,17 +9,17 @@ function asList(value: { toString(): string }): string[] {
 }
 
 const TEN_GOD: Record<string, string> = {
-  比肩: '同辈与自己人，也是竞争。',
-  劫财: '合伙里容易分走的那一份。',
-  食神: '慢慢做出来的才，口福和产出。',
-  伤官: '表达、破格、才气外露。',
-  偏财: '流动的资源和意外之财。',
-  正财: '分内、稳定、要经营的收入。',
-  七杀: '压力、权威和突发的责任。',
-  正官: '职位、规则和正当的约束。',
-  偏印: '冷门技能和想得很多的脑子。',
-  正印: '庇护、证书和长辈的托。',
-  日主: '自己。',
+  比肩: '同辈、合伙人和竞争者都会出现。',
+  劫财: '一起做事时，钱和功劳容易被分走。',
+  食神: '适合慢慢做、慢慢享受，手艺和口福都在这里。',
+  伤官: '想法多、话也冲，适合表达，不适合硬守旧规矩。',
+  偏财: '钱来得活，意外的机会比固定工资更多。',
+  正财: '收入靠经营，比较稳定，但要自己盯着。',
+  七杀: '压力和突发的责任多，扛得住就有位置。',
+  正官: '职位和规矩对你重要，按章办事比较顺。',
+  偏印: '适合冷门技能和独自琢磨，想得会比较多。',
+  正印: '容易得到长辈、证书和庇护。',
+  日主: '这就是你自己。',
 };
 
 export type Pillar = {
@@ -123,7 +123,6 @@ export function buildBazi(profile: Profile): BaziChart {
   const strong = support >= total * 0.42;
   const officer = ELEMENTS.find((element) => controls(element) === dm) ?? dm;
   const output = generates(dm);
-  const wealth = controls(dm);
   const useful = strong
     ? (scores[officer] ?? 0) >= (scores[output] ?? 0)
       ? officer
@@ -162,13 +161,16 @@ export function buildBazi(profile: Profile): BaziChart {
     strong,
     useful,
     usefulText: strong
-      ? `日主${dayMaster}${dm}偏旺，简论宜泄宜克。食伤为${output}，官杀为${officer}，财为${wealth}。此处取${useful}作参照，用来看哪一类事更能把力气用出去。`
-      : `日主${dayMaster}${dm}偏弱，简论宜生宜扶。印为${resource}，比劫为${dm}。此处取${useful}作参照，适合把根基和帮手放在这类五行上。`,
+      ? `你这个人力气偏旺。五行是${dm}，偏向${elementPlain(dm)}。力气旺的时候，适合把劲用出去：做事、扛责任、去争取，比一味休养更顺。可以多碰「${useful}」这类事，也就是${elementPlain(useful)}。`
+      : `你这个人力气偏弱。五行是${dm}，偏向${elementPlain(dm)}。先找人帮、先把身体和底气养够，再去硬扛，会比一个人冲更合适。可以多靠「${useful}」，也就是${elementPlain(useful)}。`,
     images: [
-      { title: '年柱 · 根源', text: `${pillars[0].ganZhi}，天干${pillars[0].stemGod}。${TEN_GOD[pillars[0].stemGod] ?? ''}看早年场面、长辈和出身的气候。` },
-      { title: '月柱 · 大纲', text: `${pillars[1].ganZhi}，月令是事业和出门见到的天气。天干${pillars[1].stemGod}，${TEN_GOD[pillars[1].stemGod] ?? ''}` },
-      { title: '日支 · 配偶宫', text: `日支${pillars[2].ganZhi[1]}藏${pillars[2].hide.join('、') || '—'}，十神${pillars[2].hideGod.join('、') || '—'}。亲近的人，往往带着这股气。` },
-      { title: '时柱 · 归宿', text: `${pillars[3].ganZhi}，天干${pillars[3].stemGod}。${TEN_GOD[pillars[3].stemGod] ?? ''}看晚一点的出口、作品和晚辈。` },
+      { title: '早年与长辈', text: `这一柱是${pillars[0].ganZhi}。它看早年、家里和长辈给你的底子。这一面是：${TEN_GOD[pillars[0].stemGod] ?? '和你自己的脾气有关。'}` },
+      { title: '事业与出门', text: `这一柱是${pillars[1].ganZhi}。它看你出门做事、工作里最常见的情况。这一面是：${TEN_GOD[pillars[1].stemGod] ?? '和你做事的方式有关。'}` },
+      {
+        title: '亲近的人',
+        text: `和你朝夕相处的人，往往带着这些特点：${pillars[2].hideGod.map((god) => TEN_GOD[god] ?? god).join('') || '看不太出固定的一种。'}`,
+      },
+      { title: '往后与成果', text: `这一柱是${pillars[3].ganZhi}。它看晚些时候的出口、你做出来的东西，以及晚辈。这一面是：${TEN_GOD[pillars[3].stemGod] ?? '和你后来怎么收场有关。'}` },
     ],
     startText: `${yun.getStartYear()}年${yun.getStartMonth()}个月${yun.getStartDay()}天，约 ${yun.getStartSolar().toYmd()} 起运`,
     decades,

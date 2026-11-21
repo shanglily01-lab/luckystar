@@ -7,7 +7,9 @@ import {
   branchRelation,
   controls,
   elementColor,
+  elementPlain,
   generates,
+  relationPlain,
   stemElement,
   type Element,
 } from './wuxing';
@@ -64,6 +66,21 @@ export type DailyBoard = {
 
 const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
 
+const DAY_KIND: Record<string, string> = {
+  建: '适合起头、定规矩',
+  除: '适合清理旧的、去掉不要的',
+  满: '容易满，也容易过头，见好就收',
+  平: '平平常常，按部就班就好',
+  定: '适合把事情定下来',
+  执: '适合按已经定好的计划做',
+  破: '旧安排容易破，不宜硬开工',
+  危: '要多留神，别赶',
+  成: '事情比较容易做成',
+  收: '适合收尾、收款、归档',
+  开: '适合开工、开业、开口',
+  闭: '适合收着，不宜大张旗鼓',
+};
+
 function verdictOf(score: number): Verdict {
   if (score >= 82) return '大吉';
   if (score >= 68) return '吉';
@@ -111,7 +128,8 @@ export function buildDaily(date: Date, profile: Profile | null): DailyBoard {
   const times = solar.getLunar().getTimes();
   const dayBranch = almanac.dayGZ[1];
 
-  let personal = '未填写生辰，下面按黄历本身看，不掺个人冲合。';
+  const dayKind = DAY_KIND[almanac.zhiXing] ? `今天这一天，${DAY_KIND[almanac.zhiXing]}。` : '';
+  let personal = `还没填生辰，下面只按黄历看，不对照你个人。${dayKind}`;
   let yearBranch = '';
   let dayMasterElement: Element | null = null;
   if (profile) {
@@ -120,7 +138,7 @@ export function buildDaily(date: Date, profile: Profile | null): DailyBoard {
     dayMasterElement = stemElement(chart.dayMaster);
     const relation = branchRelation(yearBranch, dayBranch);
     const city = findCity(profile.cityId);
-    personal = `${profile.name || '命主'}生肖${chart.zodiac}，日主${chart.dayMaster}${dayMasterElement}。今日地支${dayBranch}与年支${relation}。参照出生地${city.name}，真太阳时 ${chart.clockLabel}。`;
+    personal = `${profile.name || '你'}属${chart.zodiac}。你自己的五行是${dayMasterElement}，偏向${elementPlain(dayMasterElement)}。今天和你的生肖${relationPlain(relation)}。出生地按${city.name}算。${dayKind}`;
   }
 
   const matters = MATTERS.map((matter) =>
@@ -144,27 +162,27 @@ function scoreMatter(
   const bad = hit(almanac.ji, matter.keys);
   if (good.length) {
     score += 24;
-    reasons.push(`黄历宜「${good.join('、')}」，和这件事对得上。`);
+    reasons.push(`黄历写了适合「${good.join('、')}」，和这件事对得上。`);
   }
   if (bad.length) {
     score -= 28;
-    reasons.push(`黄历忌「${bad.join('、')}」，这件事今天宜缓。`);
+    reasons.push(`黄历写了不适合「${bad.join('、')}」，这件事先缓一缓。`);
   }
   if (!good.length && !bad.length) {
-    reasons.push('黄历没有直接点名这件事，要看时辰和你自己的冲合。');
+    reasons.push('黄历没有直接写这件事。接着看哪个钟点更合适，以及跟你的生肖合不合。');
   }
 
   if (yearBranch) {
     const relation = branchRelation(yearBranch, dayBranch);
     if (relation === '六冲') {
       score -= 14;
-      reasons.push(`今日冲你的生肖（${relation}），外出和签字都要多核对一遍。`);
+      reasons.push('今天冲你的生肖，出门和签字都要再核对一遍。');
     } else if (relation === '六害') {
       score -= 8;
-      reasons.push('今日与生肖六害，琐事和口舌容易缠一点。');
+      reasons.push('今天和你的生肖容易生小别扭，琐事和口角会多一点。');
     } else if (relation === '六合' || relation === '三合') {
       score += 8;
-      reasons.push(`今日与生肖${relation}，贵人和顺手的事更容易碰上。`);
+      reasons.push('今天和你的生肖合得来，贵人和顺手的事更容易碰上。');
     }
   }
 
@@ -173,17 +191,17 @@ function scoreMatter(
     if (matter.wealth) {
       if (controls(dayMaster) === matterElement) {
         score += 6;
-        reasons.push(`日主${dayMaster}克${matterElement}，求财这一路上你拿得住。`);
+        reasons.push('谈钱、做买卖这一路，你压得住，比较拿得住分寸。');
       } else if (controls(matterElement) === dayMaster) {
         score -= 6;
-        reasons.push('财的气势压过日主，今天不宜加杠杆。');
+        reasons.push('钱的场面比你眼下的力气大，今天别借钱加码，也别一次押太多。');
       }
     } else if (generates(dayMaster) === matterElement || dayMaster === matterElement) {
       score += 5;
-      reasons.push(`日主${dayMaster}生助这件事所需的${matterElement}，做起来不费劲。`);
+      reasons.push('这件事和你的五行是一路的，做起来比较不费劲。');
     } else if (controls(matterElement) === dayMaster) {
       score -= 5;
-      reasons.push(`这件事的${matterElement}气克日主，做完容易累，量力即可。`);
+      reasons.push('这件事的气势压着你，做完容易累，量力就好。');
     }
   }
 
@@ -203,9 +221,10 @@ function scoreMatter(
   });
   const lucky = hours.filter((hour) => hour.good && !hour.bad).slice(0, 3);
   const colorElement = dayMaster && generates(dayMaster) === matter.element ? dayMaster : matter.element;
+  const color = elementColor(colorElement);
   const advice = lucky.length
-    ? `若要办，优先 ${lucky.map((hour) => `${hour.ganZhi}（${hour.range}）`).join('、')}。方位可参考财神${almanac.cai}、喜神${almanac.xi}。颜色用${elementColor(colorElement)}。`
-    : `今天没有特别贴合的吉时，能改期就改；若必须办，避开时辰忌里带同类字的那段，颜色仍可用${elementColor(colorElement)}。`;
+    ? `如果要办，优先这些钟点：${lucky.map((hour) => hour.range).join('、')}。可以往财神方位（${almanac.cai}）、喜神方位（${almanac.xi}）走走。衣服或小物用${color}。`
+    : `今天没有特别合适的钟点。能改期就改；如果必须办，避开下面标红的时段。衣服或小物仍可用${color}。`;
 
   return {
     matter,
@@ -213,7 +232,7 @@ function scoreMatter(
     verdict: verdictOf(score),
     reasons,
     advice,
-    color: elementColor(colorElement),
+    color,
     hours,
   };
 }
@@ -232,10 +251,10 @@ export function askToday(question: string, board: DailyBoard): { item: MatterLuc
   if (!best) {
     return {
       item: null,
-      note: `这句话对不上固定事项，先看今日总运「${board.overall}」。想问得更准，可以点下面的一类，或改写成签约、出行、面试这类词。`,
+      note: `这句话对不上下面的固定类别。先看今天的总评「${board.overall}」。想问得更准，点下面的一类，或改成签约、出行、面试这种说法。`,
     };
   }
-  return { item: best, note: `按「${best.matter.name}」来看今天这件事。` };
+  return { item: best, note: `按「${best.matter.name}」来看你今天这件事。` };
 }
 
 export function dateKey(date: Date) {

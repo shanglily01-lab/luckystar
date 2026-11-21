@@ -52,7 +52,28 @@ export function controls(from: Element): Element {
 }
 
 export function elementColor(element: Element): string {
-  return { 木: '青绿', 火: '朱红', 土: '赭黄', 金: '月白', 水: '玄青' }[element];
+  return { 木: '绿色', 火: '红色', 土: '黄色', 金: '白色', 水: '蓝色或黑色' }[element];
+}
+
+export function elementPlain(element: Element): string {
+  return {
+    木: '生长、学习和开头',
+    火: '表达、露面和热情',
+    土: '稳定、落实和收尾',
+    金: '决断、规矩和钱财',
+    水: '思考、变通和流动',
+  }[element];
+}
+
+export function relationPlain(relation: BranchRelation): string {
+  return {
+    六合: '很合拍，在一起比较省力',
+    三合: '能凑到一起，互相补得上',
+    比和: '节奏差不多',
+    平常: '没有明显的合，也没有明显的冲',
+    六害: '容易有小别扭和口角',
+    六冲: '容易对着来，要多核对一遍',
+  }[relation];
 }
 
 const PAIRS: [string, string][] = [

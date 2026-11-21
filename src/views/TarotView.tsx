@@ -58,8 +58,8 @@ export function TarotView() {
         <article className="prose">
           <h2>怎么连起来看</h2>
           <p>
-            过去的「{draws[0].card.name}」还留在这件事里；现在站在「{draws[1].card.name}」；
-            若照这个做法走，倾向走向「{draws[2].card.name}」。逆位不是凶，是这张牌的力量用偏、用过，或还没准备好。
+            过去那张「{draws[0].card.name}」还留在这件事里。现在你站在「{draws[1].card.name}」。
+            如果照现在的做法走，比较会走向「{draws[2].card.name}」。牌倒过来不是凶，只是这张牌的意思用偏了、用过了，或者还没准备好。
           </p>
         </article>
       ) : null}

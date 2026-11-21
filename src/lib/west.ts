@@ -112,7 +112,7 @@ export function buildWest(profile: Profile): WestChart {
     rising,
     planets,
     aspects,
-    reading: `太阳${sun}，是你习惯拿出来见人的方式。${SIGN_NOTE[sun]}月亮${moon}，是需要被安顿的部分。${SIGN_NOTE[moon]}上升${rising}，是别人进门时先碰到的气场。${SIGN_NOTE[rising]}中天落在${placeOf(mc).sign}，事业上更愿意被看成这一路的人。`,
+    reading: `太阳在${sun}：这是你习惯拿出来见人的方式。${SIGN_NOTE[sun]}月亮在${moon}：这是你需要被安顿的内心。${SIGN_NOTE[moon]}上升在${rising}：别人第一次见到你时的感觉。${SIGN_NOTE[rising]}事业上，别人更愿意把你看成${placeOf(mc).sign}这一路的人。`,
   };
 }
 
@@ -123,6 +123,14 @@ const ASPECTS = [
   { name: '三分', angle: 120, orb: 6 },
   { name: '冲相', angle: 180, orb: 8 },
 ];
+
+export const ASPECT_PLAIN: Record<string, string> = {
+  合相: '两股力量叠在一起',
+  六分: '有机会，但要自己伸手',
+  刑相: '互相别扭，需要调整',
+  三分: '互相帮得上',
+  冲相: '对着来，要做取舍',
+};
 
 function findAspects(planets: Placement[]): Aspect[] {
   const list: Aspect[] = [];

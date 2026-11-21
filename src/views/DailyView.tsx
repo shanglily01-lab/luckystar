@@ -62,14 +62,14 @@ export function DailyView({ profile, onAsk }: { profile: Profile | null; onAsk: 
         <span>忌 {board.almanac.ji.join('、')}</span>
       </div>
       <dl className="facts">
-        <div><dt>冲煞</dt><dd>冲{board.almanac.chong} 煞{board.almanac.sha}</dd></div>
-        <div><dt>喜神</dt><dd>{board.almanac.xi}</dd></div>
-        <div><dt>福神</dt><dd>{board.almanac.fu}</dd></div>
-        <div><dt>财神</dt><dd>{board.almanac.cai}</dd></div>
-        <div><dt>建除</dt><dd>{board.almanac.zhiXing} · {board.almanac.tianShen}</dd></div>
+        <div><dt>容易冲到</dt><dd>{board.almanac.chong}，不利方向 {board.almanac.sha}</dd></div>
+        <div><dt>顺利的方位</dt><dd>{board.almanac.xi}</dd></div>
+        <div><dt>得帮助的方位</dt><dd>{board.almanac.fu}</dd></div>
+        <div><dt>和钱有关的方位</dt><dd>{board.almanac.cai}</dd></div>
+        <div><dt>今天这一天</dt><dd>{board.almanac.zhiXing}日</dd></div>
         <div><dt>星宿</dt><dd>{board.almanac.xiu}</dd></div>
         <div><dt>节气</dt><dd>{board.almanac.jie}</dd></div>
-        <div><dt>彭祖</dt><dd>{board.almanac.pengzu}</dd></div>
+        <div><dt>老黄历口诀</dt><dd>{board.almanac.pengzu}</dd></div>
       </dl>
       <div className="matter-grid">
         {board.matters.map((item) => (
@@ -85,7 +85,7 @@ export function DailyView({ profile, onAsk }: { profile: Profile | null; onAsk: 
         ))}
       </div>
       {selected ? <MatterDetail item={selected} question={asked} onAsk={onAsk} /> : <p className="hint">写下今天要办的事，或点开下面一类。</p>}
-      <p className="disclaimer">吉凶综合黄历宜忌、建除、生肖冲合和日主五行，同一天同一件事结果固定。它是对照，不是命令。</p>
+      <p className="disclaimer">吉凶是把黄历适合不适合、今天是什么样的日子、你的生肖合不合，合在一起看的。同一天同一件事，结果是固定的。拿来对照就好，不是必须照做。</p>
     </section>
   );
 }
@@ -112,7 +112,7 @@ function MatterDetail({ item, question, onAsk }: { item: MatterLuck; question: s
           </span>
         ))}
       </div>
-      <p className="hint">标绿的时辰黄历宜这类事，标赤的宜避开。{goodHours.length ? '' : '今天没有直接宜这件事的时辰。'}</p>
+      <p className="hint">绿色钟点更适合办这件事，红色钟点先避开。{goodHours.length ? '' : '今天没有直接适合这件事的钟点。'}</p>
       <button className="ghost" type="button" onClick={() => onAsk(question || `今日${item.matter.name}，可否进行？`)}>
         就这件事再起一卦
       </button>

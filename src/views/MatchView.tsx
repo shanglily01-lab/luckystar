@@ -37,7 +37,7 @@ export function MatchView({
           <h1>姻缘与合作</h1>
         </div>
       </div>
-      <p className="lead">年支看外人眼中的节奏，日支看住在一起的日常，日主看谁在生谁，太阳星座只占表达方式。</p>
+      <p className="lead">第一段看别人眼里你们合不合拍，第二段看住在一起的日常，第三段看谁更容易让着谁。星座只说明说话方式。</p>
       <div className="pair">
         <PersonCard title="甲方" profile={self} onEdit={() => setEditing('self')} />
         <PersonCard title="乙方" profile={partner} onEdit={() => setEditing('partner')} />

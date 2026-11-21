@@ -51,10 +51,10 @@ export function castMeihua(question: string, date = new Date()): CastResult {
 }
 
 export function lineNotes(result: CastResult) {
-  if (!result.changing.length) return ['六爻皆不变。事情按本卦的方向走，不必强行加码。'];
+  if (!result.changing.length) return ['六层都没有变动。事情按眼前这卦的说法走，不必再加码。'];
   return result.changing.map((index) => {
     const line = result.lines[index];
-    const quality = line.yang ? '阳动，劲头向外' : '阴动，事情向内收';
-    return `第${index + 1}爻发动，${quality}。${LINE_ROLE[index]}`;
+    const quality = line.yang ? '劲头往外，适合行动' : '劲头往回收，适合整顿';
+    return `从下往上数，第 ${index + 1} 层在变，${quality}。${LINE_ROLE[index]}`;
   });
 }

@@ -67,20 +67,62 @@ export function starLabel(star: StarLike) {
   return `${star.name}${star.brightness ? `·${star.brightness}` : ''}${star.mutagen ? star.mutagen : ''}`;
 }
 
+const BRIGHT: Record<string, string> = {
+  庙: '在这里很得力',
+  旺: '在这里发挥得好',
+  得: '能用，但不算最亮',
+  利: '有利，出力正常',
+  平: '不好不坏',
+  不: '有点使不上劲',
+  陷: '在这里使不上劲，相关的事要多留神',
+};
+
+const HUA: Record<string, string> = {
+  禄: '会多带来资源和顺遂',
+  权: '会多带来担当和做主的机会',
+  科: '会多带来名声、考试和文书',
+  忌: '波折会被放大，相关的事要慢一点',
+};
+
+const STAGE: Record<string, string> = {
+  长生: '刚起步，有生长的劲',
+  沐浴: '还不稳定，容易受外界影响',
+  冠带: '开始像样，可以见人',
+  临官: '能当差，也能扛事',
+  帝旺: '最旺的一段，也容易过满',
+  衰: '力气往回收',
+  病: '需要休整',
+  死: '旧的一段在结束',
+  墓: '适合收纳和沉淀',
+  绝: '旧路走不通，要换方法',
+  胎: '新的想法还在酝酿',
+  养: '慢慢养，不宜催',
+};
+
+function huaPlain(value: string) {
+  const key = value.replace(/^化/, '');
+  return HUA[key] ? `这颗星${HUA[key]}。` : '';
+}
+
+export function yearStars(names: string[]) {
+  const tags = ['多资源', '多担当', '多名声', '多波折'];
+  return names.map((name, index) => (tags[index] ? `${name}（${tags[index]}）` : name)).join('，');
+}
+
 export function palaceReading(palace: PalaceLike, all: PalaceLike[]) {
-  const theme = PALACE_THEME[palace.name] ?? '这一宫所管的生活切片';
+  const theme = PALACE_THEME[palace.name] ?? '这一块生活';
   const majors = palace.majorStars;
   let starText = '';
   if (majors.length === 0) {
     const opposite = all.find((item) => item.earthlyBranch === OPPOSITE[palace.earthlyBranch]);
-    const borrowed = opposite?.majorStars.map((star) => star.name).join('、') || '无主星';
-    starText = `本宫无主星，借对宫${opposite?.earthlyBranch ?? ''}的${borrowed}来看。空宫的事，往往要借别人的场子或另一处的资源。`;
+    const borrowed = opposite?.majorStars.map((star) => star.name).join('、') || '对面也没有主星';
+    starText = `这一宫没有主星，要借对面的「${borrowed}」来看。意思是：这件事往往要借别人的场合，或另一处的资源，才能做成。`;
   } else {
     starText = majors
       .map((star) => {
-        const base = MAJOR_STAR[star.name] ?? `${star.name}落在这里，会把这件事的气质带偏到它自己的路子上。`;
-        const bright = star.brightness ? `亮度${star.brightness}。` : '';
-        const mutagen = star.mutagen ? `生年四化带${star.mutagen}，这颗星的课题会被放大。` : '';
+        const base = MAJOR_STAR[star.name] ?? `${star.name}在这里，会把这件事带向它自己的路子。`;
+        const bright = star.brightness ? `它${BRIGHT[star.brightness] ?? `的状态是${star.brightness}`}。` : '';
+        const mutagen = star.mutagen ? huaPlain(star.mutagen) : '';
         return `${star.name}：${base}${bright}${mutagen}`;
       })
       .join('');
@@ -88,7 +130,9 @@ export function palaceReading(palace: PalaceLike, all: PalaceLike[]) {
   const minors = [...palace.minorStars, ...palace.adjectiveStars]
     .filter((star) => MINOR_STAR[star.name])
     .slice(0, 4)
-    .map((star) => `${star.name}，${MINOR_STAR[star.name]}`)
+    .map((star) => MINOR_STAR[star.name])
     .join('');
-  return `${palace.name}看${theme}。宫干${palace.heavenlyStem}${palace.earthlyBranch}，十二长生落在${palace.changsheng12}，大限${palace.decadal.range[0]}至${palace.decadal.range[1]}岁。${starText}${minors ? `辅星里：${minors}` : ''}`;
+  const stage = STAGE[palace.changsheng12] ?? palace.changsheng12;
+  const extra = minors ? `旁边还会添一层：${minors}` : '';
+  return `${palace.name}管的是：${theme}。${palace.decadal.range[0]}岁到${palace.decadal.range[1]}岁，会重点碰到这里的事，这一段${stage}。${starText}${extra}`;
 }

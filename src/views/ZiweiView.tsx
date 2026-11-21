@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { buildZiwei, palaceReading, starLabel } from '../lib/ziwei';
+import { buildZiwei, palaceReading, starLabel, yearStars } from '../lib/ziwei';
 import type { Profile } from '../types';
 
 const AREA: Record<string, string> = {
@@ -38,7 +38,7 @@ export function ZiweiView({ profile }: { profile: Profile }) {
         </p>
       </div>
       <p className="personal">
-        农历 {chart.lunarDate} · 生肖{chart.zodiac} · {chart.sign}。真太阳时 {chart.clockLabel}。今年流年 {chart.yearName}，四化 {chart.yearMutagen.join('、')}。
+        农历 {chart.lunarDate}，属{chart.zodiac}，星座{chart.sign}。今年是{chart.yearName}年，特别亮的四颗星是：{yearStars(chart.yearMutagen)}。
       </p>
       <div className="ziwei">
         {chart.palaces.map((palace) => (
@@ -84,7 +84,7 @@ export function ZiweiView({ profile }: { profile: Profile }) {
         <h2>{selected.name} · {selected.heavenlyStem}{selected.earthlyBranch}</h2>
         <p>{palaceReading(selected, chart.palaces)}</p>
       </article>
-      <p className="disclaimer">星情是按宫位、主星和四化整理的说明，方便读盘，不是断语。</p>
+      <p className="disclaimer">点开一宫，下面那段是在说这块生活怎么过。星名留在盘上方便对照，不是一句定论。</p>
     </section>
   );
 }

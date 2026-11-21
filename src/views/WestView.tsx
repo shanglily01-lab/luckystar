@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { SIGN_GLYPH, buildWest, type WestChart } from '../lib/west';
+import { ASPECT_PLAIN, SIGN_GLYPH, buildWest, type WestChart } from '../lib/west';
 import type { Profile } from '../types';
 
 export function WestView({ profile }: { profile: Profile }) {
@@ -39,8 +39,7 @@ export function WestView({ profile }: { profile: Profile }) {
           <ul className="aspects">
             {chart.aspects.map((aspect) => (
               <li key={aspect.a + aspect.b + aspect.name}>
-                {aspect.a}{aspect.name}{aspect.b}
-                <small>容许 {aspect.orb}°</small>
+                {aspect.a}与{aspect.b}：{ASPECT_PLAIN[aspect.name] ?? aspect.name}
               </li>
             ))}
           </ul>
@@ -50,7 +49,7 @@ export function WestView({ profile }: { profile: Profile }) {
         <h2>日、月与上升</h2>
         <p>{chart.reading}</p>
       </article>
-      <p className="disclaimer">行星黄经用天文历算，宫位用上升点起的等宫制，不是整宫或普拉西德。上升受出生时刻影响很大。</p>
+      <p className="disclaimer">盘是按出生时刻算的。上升对钟点很敏感，时刻差一小时，别人见到你的第一印象就会变。</p>
     </section>
   );
 }

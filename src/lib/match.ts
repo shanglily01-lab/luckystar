@@ -1,7 +1,7 @@
 import type { Profile } from '../types';
 import { buildBazi } from './bazi';
 import { buildWest } from './west';
-import { branchRelation, stemElement, stemRelation, type Element } from './wuxing';
+import { branchRelation, elementPlain, relationPlain, stemElement, stemRelation, type Element } from './wuxing';
 
 export type MatchSide = {
   name: string;
@@ -32,6 +32,14 @@ function side(profile: Profile): MatchSide {
     sun: west.sun,
     element: stemElement(bazi.dayMaster),
   };
+}
+
+function stemFeel(relation: string) {
+  if (relation === '比和' || relation === '同类') return '两个人脾气相近，也容易较劲。';
+  if (relation === '天干相合') return '容易互相吸引，也好商量。';
+  if (relation.includes('生')) return '一个会自然帮着另一个，被帮的那个更省力。';
+  if (relation.includes('克')) return '两个人会互相卡，一个容易觉得另一个管得太紧。';
+  return '没有明显的谁帮谁、谁压谁。';
 }
 
 function relationScore(relation: string) {
@@ -66,24 +74,24 @@ export function buildMatch(aProfile: Profile, bProfile: Profile): MatchReport {
 
   const lines = [
     {
-      title: '生肖年支',
+      title: '表面相处',
       score: yearScore,
-      text: `${a.name}属${a.zodiac}（${a.year}），${b.name}属${b.zodiac}（${b.year}），年支${yearRel}。这是外人眼中的相处节奏。`,
+      text: `${a.name}属${a.zodiac}，${b.name}属${b.zodiac}。外人看起来，你们${relationPlain(yearRel)}。`,
     },
     {
-      title: '日支配偶宫',
+      title: '日常相处',
       score: dayScore,
-      text: `${a.name}日支${a.day[1]}，${b.name}日支${b.day[1]}，${dayRel}。日支看住在一起之后的日常，比年支更贴身。`,
+      text: `真的天天在一起时，你们${relationPlain(dayRel)}。这一层比生肖更要紧。`,
     },
     {
-      title: '日主天干',
+      title: '谁顺着谁',
       score: stemScore,
-      text: `${a.day[0]}与${b.day[0]}为${stemRel}。${a.element}与${b.element}的生克，决定谁更容易迁就谁。`,
+      text: `${a.name}是${a.element}（${elementPlain(a.element)}），${b.name}是${b.element}（${elementPlain(b.element)}）。${stemFeel(stemRel)}谁让着谁，最好先说好。`,
     },
     {
-      title: '太阳星座',
+      title: '说话方式',
       score: sunScore,
-      text: `${a.name}太阳${a.sun}，${b.name}太阳${b.sun}。星座看表达方式，合盘里它只占一成多，不当成全部。`,
+      text: `${a.name}给人的感觉偏${a.sun}，${b.name}偏${b.sun}。这只说明表达方式，不是两个人合不合适的全部。`,
     },
   ];
 

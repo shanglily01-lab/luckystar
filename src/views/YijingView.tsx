@@ -60,8 +60,8 @@ export function YijingView({ question, onQuestion }: { question: string; onQuest
       {lines.length > 0 && lines[lines.length - 1].coins.length > 0 ? (
         <p className="hint">
           最近一掷：{lines[lines.length - 1].coins.map((coin) => (coin === 3 ? '字' : '背')).join(' ')}，
-          合计 {lines[lines.length - 1].value}
-          （6 老阴，7 少阳，8 少阴，9 老阳）
+          合计 {lines[lines.length - 1].value}。
+          6 和 9 表示这一层会变，7 和 8 表示这一层保持原样。
         </p>
       ) : null}
       {result ? <Reading result={result} /> : null}
@@ -76,16 +76,16 @@ function Reading({ result }: { result: CastResult }) {
     <article className="prose">
       <p className="hint">{result.method} · {result.question}</p>
       <div className="gua-pair">
-        <Gua title="本卦" gua={result.original} lines={result.lines.map((line) => line.yang)} changing={result.changing} />
+        <Gua title="眼前" gua={result.original} lines={result.lines.map((line) => line.yang)} changing={result.changing} />
         {result.changed ? (
           <Gua
-            title="之卦"
+            title="变动后"
             gua={result.changed}
             lines={result.lines.map((line) => (line.changing ? !line.yang : line.yang))}
             changing={[]}
           />
         ) : (
-          <p>没有变爻，看本卦即可。</p>
+          <p>没有变动的一层，看眼前这卦就够了。</p>
         )}
       </div>
       <h2>{hexSymbol(result.original.no)} {result.original.name}</h2>
@@ -93,7 +93,7 @@ function Reading({ result }: { result: CastResult }) {
       <p>{result.original.advice}</p>
       {result.changed ? (
         <>
-          <h2>变为 {hexSymbol(result.changed.no)} {result.changed.name}</h2>
+          <h2>变动之后是 {hexSymbol(result.changed.no)} {result.changed.name}</h2>
           <p>{result.changed.summary}{result.changed.advice}</p>
         </>
       ) : null}

@@ -44,9 +44,11 @@ export function BaziView({ profile }: { profile: Profile }) {
         ))}
       </div>
       <article className="prose">
-        <h2>{chart.strong ? '身偏旺' : '身偏弱'} · 参照用神 {chart.useful}</h2>
+        <h2>{chart.strong ? '你的力气偏旺' : '你的力气偏弱'} · 多靠「{chart.useful}」</h2>
         <p>{chart.usefulText}</p>
-        <p>命宫 {chart.mingGong}，身宫 {chart.shenGong}，胎元 {chart.taiYuan}，胎息 {chart.taiXi}。{chart.startText}。</p>
+        <p>
+          命宫 {chart.mingGong} 是一生更常待的主场，身宫 {chart.shenGong} 是后半段更在意的生活。胎元 {chart.taiYuan}、胎息 {chart.taiXi} 是出生时带的底子。大运大约在{chart.startText}，之后每十年换一档。
+        </p>
       </article>
       <h2>大运</h2>
       <div className="decades">
@@ -77,7 +79,7 @@ export function BaziView({ profile }: { profile: Profile }) {
           </article>
         ))}
       </div>
-      <p className="disclaimer">旺衰用神是按月令、天干和藏干加权的简论，方便对照，不是盲派全盘，也不能单独决定一件事。</p>
+      <p className="disclaimer">旺不旺是按出生月份粗算的，方便看该使劲还是该养着。它不是完整的算命，也不能单独决定一件事。</p>
     </section>
   );
 }
