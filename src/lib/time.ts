@@ -17,12 +17,46 @@ export function clockText(clock: Clock) {
   return `${clock.year}-${pad(clock.month)}-${pad(clock.day)} ${pad(clock.hour)}:${pad(clock.minute)}`;
 }
 
+const zoneFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function zoneFormatter(timeZone: string) {
+  let formatter = zoneFormatters.get(timeZone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+    zoneFormatters.set(timeZone, formatter);
+  }
+  return formatter;
+}
+
+function offsetMinutes(timeZone: string, utcMs: number) {
+  const bag: Record<string, string> = {};
+  for (const part of zoneFormatter(timeZone).formatToParts(new Date(utcMs))) bag[part.type] = part.value;
+  const hour = Number(bag.hour) % 24;
+  const asUTC = Date.UTC(Number(bag.year), Number(bag.month) - 1, Number(bag.day), hour, Number(bag.minute), Number(bag.second));
+  return Math.round((asUTC - utcMs) / 60000);
+}
+
+/** 出生地钟面时间对应的 UTC 毫秒。国内按北京时间，国外按当地标准时或夏令时。 */
+export function localToUtc(year: number, month: number, day: number, hour: number, minute: number, timeZone: string) {
+  const wall = Date.UTC(year, month - 1, day, hour, minute);
+  let utc = wall;
+  for (let pass = 0; pass < 3; pass += 1) utc = wall - offsetMinutes(timeZone, utc) * 60000;
+  return utc;
+}
+
 /** 把出生地的钟面时间，校正成地方平太阳时。 */
 export function trueSolar(profile: Profile): Clock {
   const city = findCity(profile.cityId);
-  const instant =
-    Date.UTC(profile.year, profile.month - 1, profile.day, profile.hour, profile.minute) -
-    city.tz * 3600000;
+  const instant = localToUtc(profile.year, profile.month, profile.day, profile.hour, profile.minute, city.zone);
   const solar = instant + (city.longitude / 15) * 3600000;
   const date = new Date(solar);
   return {
@@ -37,10 +71,7 @@ export function trueSolar(profile: Profile): Clock {
 /** 出生瞬间，用于行星位置。 */
 export function birthInstant(profile: Profile): Date {
   const city = findCity(profile.cityId);
-  return new Date(
-    Date.UTC(profile.year, profile.month - 1, profile.day, profile.hour, profile.minute) -
-      city.tz * 3600000,
-  );
+  return new Date(localToUtc(profile.year, profile.month, profile.day, profile.hour, profile.minute, city.zone));
 }
 
 /** iztro 时辰序号：0 早子 … 11 亥，12 晚子。 */

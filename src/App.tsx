@@ -12,6 +12,7 @@ import { AuthView } from './views/AuthView';
 import { AccountView } from './views/AccountView';
 import { ProfileForm } from './components/ProfileForm';
 import { PayGate } from './components/PayGate';
+import { readAlmanac } from './lib/daily';
 import { loadProfile, saveProfile } from './lib/storage';
 import { pad } from './lib/time';
 import type { Profile, ViewId } from './types';
@@ -28,8 +29,9 @@ const NAV: { id: ViewId; label: string; kicker: string; text: string }[] = [
 
 export function App() {
   const { session, ready, activate } = useAuth();
-  const [view, setView] = useState<ViewId>('home');
-  const [returnView, setReturnView] = useState<ViewId>('home');
+  const [history, setHistory] = useState<ViewId[]>(['home']);
+  const view = history[history.length - 1] ?? 'home';
+  const previous = history.length > 1 ? history[history.length - 2] : null;
   const [profile, setProfile] = useState<Profile | null>(() => loadProfile());
   const [question, setQuestion] = useState('');
   const [flash, setFlash] = useState('');
@@ -52,11 +54,11 @@ export function App() {
         const query = params.toString();
         window.history.replaceState({}, '', query ? `${window.location.pathname}?${query}` : window.location.pathname);
         setFlash('邮箱已激活，注册金币已到账。');
-        setView('account');
+        setHistory(['home', 'account']);
       })
       .catch((reason) => {
         setFlash(reason instanceof Error ? reason.message : '激活没有完成');
-        setView('auth');
+        setHistory(['home', 'auth']);
       });
   }, [ready, activate]);
 
@@ -65,9 +67,20 @@ export function App() {
     setProfile(next);
   }
 
-  function openAuth(back: ViewId = view) {
-    setReturnView(back === 'auth' ? 'home' : back);
-    setView('auth');
+  function open(next: ViewId) {
+    setHistory((prev) => (prev[prev.length - 1] === next ? prev : [...prev, next]));
+  }
+
+  function back() {
+    setHistory((prev) => (prev.length > 1 ? prev.slice(0, -1) : ['home']));
+  }
+
+  function show(next: ViewId) {
+    setHistory(next === 'home' ? ['home'] : ['home', next]);
+  }
+
+  function openAuth() {
+    open('auth');
   }
 
   function rememberInvite(code: string) {
@@ -82,7 +95,7 @@ export function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <button className="brand" onClick={() => setView('home')}>
+        <button className="brand" onClick={() => show('home')}>
           <span className="seal">星</span>
           <span>
             <strong>幸运星</strong>
@@ -90,16 +103,20 @@ export function App() {
           </span>
         </button>
         <nav>
-          {NAV.map((item) => (
-            <button key={item.id} className={view === item.id ? 'on' : ''} onClick={() => setView(item.id)}>
-              {item.label}
-            </button>
-          ))}
+          <button className={view === 'home' ? 'on' : ''} onClick={() => show('home')}>
+            首页
+          </button>
+          <button
+            className={view === 'catalog' || NAV.some((item) => item.id === view) ? 'on' : ''}
+            onClick={() => show('catalog')}
+          >
+            占卜
+          </button>
         </nav>
         <button
           className="account-chip"
           type="button"
-          onClick={() => (session?.user ? setView('account') : openAuth('home'))}
+          onClick={() => (session?.user ? open('account') : openAuth())}
         >
           {accountLabel}
         </button>
@@ -107,57 +124,63 @@ export function App() {
 
       <main>
         {flash ? <p className="flash">{flash}</p> : null}
+        {previous ? (
+          <button className="back" type="button" onClick={back}>
+            {previous === 'home' ? '返回首页' : previous === 'catalog' ? '返回占卜' : '返回'}
+          </button>
+        ) : null}
         <ViewBoundary resetKey={view}>
         {view === 'home' ? (
           <Home
             profile={profile}
             cityName={cityName}
             onSave={save}
-            onOpen={setView}
+            onOpen={open}
           />
         ) : null}
+        {view === 'catalog' ? <Catalog onOpen={open} /> : null}
         {view === 'daily' ? (
           <DailyView
             profile={profile}
             onAsk={(text) => {
               setQuestion(text);
-              setView('yijing');
+              open('yijing');
             }}
           />
         ) : null}
         {view === 'ziwei' ? (
           <ChartGate profile={profile} onSave={save}>
-            <PayGate feature="ziwei" title="紫微斗数" onLogin={() => openAuth('ziwei')} onAccount={() => setView('account')}>
+            <PayGate feature="ziwei" title="紫微斗数" onLogin={openAuth} onAccount={() => open('account')}>
               <ZiweiView profile={profile!} />
             </PayGate>
           </ChartGate>
         ) : null}
         {view === 'bazi' ? (
           <ChartGate profile={profile} onSave={save}>
-            <PayGate feature="bazi" title="八字命盘" onLogin={() => openAuth('bazi')} onAccount={() => setView('account')}>
+            <PayGate feature="bazi" title="八字命盘" onLogin={openAuth} onAccount={() => open('account')}>
               <BaziView profile={profile!} />
             </PayGate>
           </ChartGate>
         ) : null}
         {view === 'west' ? (
           <ChartGate profile={profile} onSave={save}>
-            <PayGate feature="west" title="西洋占星" onLogin={() => openAuth('west')} onAccount={() => setView('account')}>
+            <PayGate feature="west" title="西洋占星" onLogin={openAuth} onAccount={() => open('account')}>
               <WestView profile={profile!} />
             </PayGate>
           </ChartGate>
         ) : null}
         {view === 'match' ? (
-          <PayGate feature="match" title="姻缘合盘" onLogin={() => openAuth('match')} onAccount={() => setView('account')}>
+          <PayGate feature="match" title="姻缘合盘" onLogin={openAuth} onAccount={() => open('account')}>
             <MatchView selfProfile={profile} onSaveSelf={save} />
           </PayGate>
         ) : null}
         {view === 'yijing' ? (
-          <PayGate feature="yijing" title="易经问事" onLogin={() => openAuth('yijing')} onAccount={() => setView('account')}>
+          <PayGate feature="yijing" title="易经问事" onLogin={openAuth} onAccount={() => open('account')}>
             <YijingView question={question} onQuestion={setQuestion} />
           </PayGate>
         ) : null}
         {view === 'tarot' ? (
-          <PayGate feature="tarot" title="塔罗三牌" onLogin={() => openAuth('tarot')} onAccount={() => setView('account')}>
+          <PayGate feature="tarot" title="塔罗三牌" onLogin={openAuth} onAccount={() => open('account')}>
             <TarotView />
           </PayGate>
         ) : null}
@@ -165,10 +188,10 @@ export function App() {
           <AuthView
             inviteCode={inviteCode}
             onInviteCode={rememberInvite}
-            onDone={() => setView(returnView)}
+            onDone={back}
           />
         ) : null}
-        {view === 'account' ? <AccountView onLogin={() => openAuth('account')} /> : null}
+        {view === 'account' ? <AccountView onLogin={openAuth} /> : null}
         </ViewBoundary>
       </main>
     </div>
@@ -231,18 +254,36 @@ function Home({
   onSave: (profile: Profile) => void;
   onOpen: (view: ViewId) => void;
 }) {
-  const { session } = useAuth();
   const saved = useMemo(() => profile, [profile]);
+  const today = useMemo(() => readAlmanac(new Date()), []);
   return (
     <>
       <section className="hero">
-        <p className="eyebrow">文化娱乐 · 自我对照</p>
-        <h1>今天这件事，宜不宜。</h1>
-        <p>
-          紫微、八字、西洋占星、合婚、易经、塔罗都在。当天吉凶免费看。其余排盘用金币解锁。注册要邮箱验证码，也可以邀请朋友或购买金币。
-        </p>
+        <p className="eyebrow">第一页 · 幸运星</p>
+        <h1>先看今天，再决定要不要问。</h1>
+        <p>这一页是入口。当天吉凶免费看。紫微、八字、西洋占星、合婚、易经、塔罗都在下一页「占卜」里，按次用金币。</p>
+        <div className="hero-actions">
+          <button className="primary" type="button" onClick={() => onOpen('daily')}>
+            看当天吉凶
+          </button>
+          <button className="ghost light" type="button" onClick={() => onOpen('catalog')}>
+            进入占卜
+          </button>
+        </div>
       </section>
       <div className="home-grid">
+        <section className="sheet today-card">
+          <p className="eyebrow">{today.weekday}</p>
+          <h2>{today.solarText}</h2>
+          <p className="who">
+            {today.lunarText} · {today.yearGZ}年 · {today.dayGZ}日
+          </p>
+          <p>宜 {today.yi.slice(0, 4).join('、') || '今日没有特别宜做的事'}</p>
+          <p>忌 {today.ji.slice(0, 4).join('、') || '今日没有特别忌做的事'}</p>
+          <button className="ghost" type="button" onClick={() => onOpen('daily')}>
+            按事项看今天
+          </button>
+        </section>
         <section className="sheet">
           <h2>命主</h2>
           {saved ? (
@@ -250,24 +291,37 @@ function Home({
               {saved.name || '未署名'} · {saved.gender === 'male' ? '男' : '女'} · {saved.year}-{pad(saved.month)}-{pad(saved.day)} {pad(saved.hour)}:{pad(saved.minute)} · {cityName}
             </p>
           ) : (
-            <p className="lead">命盘需要生辰。只看当天黄历、起卦或抽牌，可以先不填。</p>
+            <p className="lead">排盘需要生辰。只看今天、起卦或抽牌，可以先不填。</p>
           )}
           <ProfileForm initial={saved} title={saved ? '修改生辰' : '填写生辰'} submitLabel={saved ? '更新命主' : '保存命主'} onSubmit={onSave} />
         </section>
-        <section className="modules">
-          {NAV.map((item) => (
-            <button key={item.id} className={item.id === 'daily' ? 'module feature' : 'module'} onClick={() => onOpen(item.id)}>
-              <span>{item.kicker}</span>
-              <strong>{item.label}</strong>
-              <em>
-                {item.text}
-                {session?.costs[item.id] ? ` · 今日 ${session.costs[item.id]} 金币` : ' · 免费'}
-              </em>
-            </button>
-          ))}
-        </section>
       </div>
       <p className="disclaimer">结果供文化娱乐和自我整理，不构成医疗、法律、投资或人生决策建议。</p>
+    </>
+  );
+}
+
+function Catalog({ onOpen }: { onOpen: (view: ViewId) => void }) {
+  const { session } = useAuth();
+  return (
+    <>
+      <section className="hero">
+        <p className="eyebrow">占卜</p>
+        <h1>选一种看法。</h1>
+        <p>当天吉凶免费。其余排盘、合婚、问卦和抽牌，登录后按次扣金币。</p>
+      </section>
+      <section className="modules">
+        {NAV.map((item) => (
+          <button key={item.id} className={item.id === 'daily' ? 'module feature' : 'module'} type="button" onClick={() => onOpen(item.id)}>
+            <span>{item.kicker}</span>
+            <strong>{item.label}</strong>
+            <em>
+              {item.text}
+              {session?.costs[item.id] ? ` · 今日 ${session.costs[item.id]} 金币` : ' · 免费'}
+            </em>
+          </button>
+        ))}
+      </section>
     </>
   );
 }

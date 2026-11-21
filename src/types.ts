@@ -13,6 +13,7 @@ export type Profile = {
 
 export type ViewId =
   | 'home'
+  | 'catalog'
   | 'daily'
   | 'ziwei'
   | 'bazi'
