@@ -94,33 +94,37 @@ export function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <button className="brand" onClick={() => show('home')}>
-          <span className="seal">星</span>
-          <span>
-            <strong>幸运星</strong>
-            <small>排盘 · 问事 · 当天吉凶</small>
-          </span>
-        </button>
-        <nav>
-          <button className={view === 'home' ? 'on' : ''} onClick={() => show('home')}>
-            命主
-          </button>
-          {NAV.map((item) => (
-            <button key={item.id} className={view === item.id ? 'on' : ''} onClick={() => show(item.id)}>
-              {item.label}
+        <div className="frame bar">
+          <div className="bar-row">
+            <button className="brand" onClick={() => show('home')}>
+              <span className="seal">星</span>
+              <span>
+                <strong>幸运星</strong>
+                <small>排盘 · 问事 · 当天吉凶</small>
+              </span>
             </button>
-          ))}
-        </nav>
-        <button
-          className="account-chip"
-          type="button"
-          onClick={() => (session?.user ? open('account') : openAuth())}
-        >
-          {accountLabel}
-        </button>
+            <button
+              className="account-chip"
+              type="button"
+              onClick={() => (session?.user ? open('account') : openAuth())}
+            >
+              {accountLabel}
+            </button>
+          </div>
+          <nav>
+            <button className={view === 'home' ? 'on' : ''} onClick={() => show('home')}>
+              命主
+            </button>
+            {NAV.map((item) => (
+              <button key={item.id} className={view === item.id ? 'on' : ''} onClick={() => show(item.id)}>
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
       </header>
 
-      <main>
+      <main className="frame">
         {flash ? <p className="flash">{flash}</p> : null}
         {previous ? (
           <button className="back" type="button" onClick={back}>
